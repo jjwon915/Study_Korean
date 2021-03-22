@@ -1,8 +1,8 @@
 package web;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.servlet.RequestDispatcher;
@@ -12,20 +12,21 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import model.DBUtil;
 
 /**
- * Servlet implementation class DoJoin
+ * Servlet implementation class DoCheck
  */
-@WebServlet("/doChildJoin") 
-public class DoChildJoin extends HttpServlet {
+@WebServlet("/doChildCheck")
+public class DoChildCheck extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public DoChildJoin() {
+    public DoChildCheck() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -35,28 +36,32 @@ public class DoChildJoin extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
+		ServletContext sc = getServletContext();		
+		Connection con= (Connection) sc.getAttribute("DBconnection2");
+		
 		request.setCharacterEncoding("UTF-8");
 		
-		String name = request.getParameter("name");
 		String id = request.getParameter("id");
-		String parentId = request.getParameter("parentId");
-		String password = request.getParameter("pw");
-		String birth = request.getParameter("birth");
-
-		ServletContext sc = getServletContext();
-		Connection conn = (Connection) sc.getAttribute("DBconnection2");
-		
-		try {
-			DBUtil.joinChild(conn, name, id, parentId, password, birth);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		ResultSet rs = DBUtil.findChild(con, id);
+		RequestDispatcher view = request.getRequestDispatcher("checkChildForm2.jsp");
+		String result = "";
+		if (rs != null) {
+			try {
+				if(rs.next()) { 
+					result = "false";
+				} else {
+					result="true";
+				}
+			} catch(SQLException e) {
+				e.printStackTrace();
+			}
 		}
+		HttpSession httpsession = request.getSession(true);
+		httpsession.setAttribute("result2", result);
+		httpsession.setAttribute("id", id);
 		
 		response.setCharacterEncoding("UTF-8");
-		
-		RequestDispatcher view = request.getRequestDispatcher("ChildManage.jsp");
-		view.forward(request, response);
+		response.sendRedirect("checkChildForm2.jsp");
 	}
 
 	/**
